@@ -107,47 +107,12 @@ func (ps Params) ByName(name string) string {
 // handler functions via configurable routes
 type Router struct {
 	trees map[string]*node
-
-	// Enables automatic redirection if the current route can't be matched but a
-	// handler for the path with (without) the trailing slash exists.
-	// For example if /foo/ is requested but a route only exists for /foo, the
-	// client is redirected to /foo with http status code 301 for GET requests
-	// and 307 for all other request methods.
-	RedirectTrailingSlash bool
-
-	// If enabled, the router tries to fix the current request path, if no
-	// handle is registered for it.
-	// First superfluous path elements like ../ or // are removed.
-	// Afterwards the router does a case-insensitive lookup of the cleaned path.
-	// If a handle can be found for this route, the router makes a redirection
-	// to the corrected path with status code 301 for GET requests and 307 for
-	// all other request methods.
-	// For example /FOO and /..//Foo could be redirected to /foo.
-	// RedirectTrailingSlash is independent of this option.
-	RedirectFixedPath bool
-
-	// If enabled, the router checks if another method is allowed for the
-	// current route, if the current request can not be routed.
-	// If this is the case, the request is answered with 'Method Not Allowed'
-	// and HTTP status code 405.
-	// If no other Method is allowed, the request is delegated to the NotFound
-	// handler.
-	HandleMethodNotAllowed bool
-
-	// If enabled, the router automatically replies to OPTIONS requests.
-	// Custom OPTIONS handlers take priority over automatic replies.
-	HandleOPTIONS bool
 }
 
 // New returns a new initialized Router.
 // Path auto-correction, including trailing slashes, is enabled by default.
 func New() *Router {
-	return &Router{
-		RedirectTrailingSlash:  true,
-		RedirectFixedPath:      true,
-		HandleMethodNotAllowed: true,
-		HandleOPTIONS:          true,
-	}
+	return &Router{}
 }
 
 // GET is a shortcut for router.Handle("GET", path, handle)
@@ -201,13 +166,11 @@ func (r *Router) Handle(method, path string, handle Handle) {
 	if r.trees == nil {
 		r.trees = make(map[string]*node)
 	}
-
 	root := r.trees[method]
 	if root == nil {
 		root = new(node)
 		r.trees[method] = root
 	}
-
 	root.addRoute(path, handle)
 }
 
