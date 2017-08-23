@@ -36,9 +36,7 @@ func (h handlerStruct) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func TestRouterRoot(t *testing.T) {
 	router := New()
-	recv := catchPanic(func() {
-		router.GET("noSlashRoot", nil)
-	})
+	recv := router.GET("noSlashRoot", nil)
 	if recv == nil {
 		t.Fatal("registering path not beginning with '/' did not panic")
 	}

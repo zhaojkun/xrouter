@@ -76,10 +76,7 @@
 //  thirdValue := ps[2].Value // the value of the 3rd parameter
 package xrouter
 
-// Handle is a function that can be registered to a route to handle HTTP
-// requests. Like http.HandlerFunc, but has a third parameter for the values of
-// wildcards (variables).
-type Handle interface{}
+import "github.com/pkg/errors"
 
 // Param is a single URL parameter, consisting of a key and a value.
 type Param struct {
@@ -116,38 +113,38 @@ func New() *Router {
 }
 
 // GET is a shortcut for router.Handle("GET", path, handle)
-func (r *Router) GET(path string, handle Handle) {
-	r.Handle("GET", path, handle)
+func (r *Router) GET(path string, handle interface{}) error {
+	return r.Handle("GET", path, handle)
 }
 
 // HEAD is a shortcut for router.Handle("HEAD", path, handle)
-func (r *Router) HEAD(path string, handle Handle) {
-	r.Handle("HEAD", path, handle)
+func (r *Router) HEAD(path string, handle interface{}) error {
+	return r.Handle("HEAD", path, handle)
 }
 
 // OPTIONS is a shortcut for router.Handle("OPTIONS", path, handle)
-func (r *Router) OPTIONS(path string, handle Handle) {
-	r.Handle("OPTIONS", path, handle)
+func (r *Router) OPTIONS(path string, handle interface{}) error {
+	return r.Handle("OPTIONS", path, handle)
 }
 
 // POST is a shortcut for router.Handle("POST", path, handle)
-func (r *Router) POST(path string, handle Handle) {
-	r.Handle("POST", path, handle)
+func (r *Router) POST(path string, handle interface{}) error {
+	return r.Handle("POST", path, handle)
 }
 
 // PUT is a shortcut for router.Handle("PUT", path, handle)
-func (r *Router) PUT(path string, handle Handle) {
-	r.Handle("PUT", path, handle)
+func (r *Router) PUT(path string, handle interface{}) error {
+	return r.Handle("PUT", path, handle)
 }
 
 // PATCH is a shortcut for router.Handle("PATCH", path, handle)
-func (r *Router) PATCH(path string, handle Handle) {
-	r.Handle("PATCH", path, handle)
+func (r *Router) PATCH(path string, handle interface{}) error {
+	return r.Handle("PATCH", path, handle)
 }
 
 // DELETE is a shortcut for router.Handle("DELETE", path, handle)
-func (r *Router) DELETE(path string, handle Handle) {
-	r.Handle("DELETE", path, handle)
+func (r *Router) DELETE(path string, handle interface{}) error {
+	return r.Handle("DELETE", path, handle)
 }
 
 // Handle registers a new request handle with the given path and method.
@@ -158,9 +155,9 @@ func (r *Router) DELETE(path string, handle Handle) {
 // This function is intended for bulk loading and to allow the usage of less
 // frequently used, non-standardized or custom methods (e.g. for internal
 // communication with a proxy).
-func (r *Router) Handle(method, path string, handle Handle) {
+func (r *Router) Handle(method, path string, handle interface{}) error {
 	if path[0] != '/' {
-		panic("path must begin with '/' in path '" + path + "'")
+		return errors.Errorf("path must begin with '/' in path '%s'", path)
 	}
 
 	if r.trees == nil {
@@ -171,7 +168,7 @@ func (r *Router) Handle(method, path string, handle Handle) {
 		root = new(node)
 		r.trees[method] = root
 	}
-	root.addRoute(path, handle)
+	return root.addRoute(path, handle)
 }
 
 // Lookup allows the manual lookup of a method + path combo.
@@ -179,7 +176,7 @@ func (r *Router) Handle(method, path string, handle Handle) {
 // If the path was found, it returns the handle function and the path parameter
 // values. Otherwise the third return value indicates whether a redirection to
 // the same path with an extra / without the trailing slash should be performed.
-func (r *Router) Lookup(method, path string) (Handle, Params, bool) {
+func (r *Router) Lookup(method, path string) (interface{}, Params, bool) {
 	if root := r.trees[method]; root != nil {
 		return root.getValue(path)
 	}
